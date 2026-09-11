@@ -13,20 +13,29 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Download and Setup ATL Headers
+      run: |
+        # Скачиваем официальные файлы WTL/ATL, которые содержат нужный atlconv.h
+        Invoke-WebRequest -Uri "https://github.com" -OutFile "wtl.zip"
+        Expand-Archive -Path "wtl.zip" -DestinationPath "wtl_extracted"
+        
+        # Создаем папку для инклудов в корне нашего чита
+        New-Item -ItemType Directory -Force -Path "ATL_Include"
+        
+        # Копируем заголовочные файлы туда
+        Copy-Item -Path "wtl_extracted\WTL-master\Include\*" -Destination "ATL_Include" -Recurse -Force
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Install ATL Component via VS Installer
-      run: |
-        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -property installationPath > vs_path.txt
-        $vsPath = Get-Content vs_path.txt
-        Start-Process "$vsPath\Common7\IDE\vsmodify.exe" -ArgumentList "modify --installPath `"$vsPath`" --add Microsoft.VisualStudio.Component.VC.ATL --passive --norestart" -Wait
-
     - name: Build Solution
-      run: msbuild CS2_External.sln /p:Configuration=Release /p:Platform=x64
+      run: |
+        # Запускаем сборку, принудительно указав компилятору искать atlconv.h в нашей скачанной папке
+        msbuild CS2_External.sln /p:Configuration=Release /p:Platform=x64 /p:IncludePath="${{ github.workspace }}\ATL_Include;$(IncludePath)"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: CS2_External_Compiled
         path: x64/Release/
+
