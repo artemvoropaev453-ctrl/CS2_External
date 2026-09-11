@@ -16,12 +16,11 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Install ATL Component
-      uses: microsoft/vswhere@v3
-      # Добавляем компонент ATL, без которого вылетала ошибка 'atlconv.h'
-    - name: Install C++ ATL for build tools
+    - name: Install ATL Component via VS Installer
       run: |
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.ATL --passive --norestart"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -property installationPath > vs_path.txt
+        $vsPath = Get-Content vs_path.txt
+        Start-Process "$vsPath\Common7\IDE\vsmodify.exe" -ArgumentList "modify --installPath `"$vsPath`" --add Microsoft.VisualStudio.Component.VC.ATL --passive --norestart" -Wait
 
     - name: Build Solution
       run: msbuild CS2_External.sln /p:Configuration=Release /p:Platform=x64
