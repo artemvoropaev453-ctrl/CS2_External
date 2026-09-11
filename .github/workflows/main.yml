@@ -1,0 +1,26 @@
+name: Build CS2 External
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build Solution
+      run: msbuild CS2_External.sln /p:Configuration=Release /p:Platform=x64
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CS2_External_Compiled
+        path: x64/Release/
