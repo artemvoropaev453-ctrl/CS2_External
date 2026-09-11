@@ -16,6 +16,13 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
+    - name: Install ATL Component
+      uses: microsoft/vswhere@v3
+      # Добавляем компонент ATL, без которого вылетала ошибка 'atlconv.h'
+    - name: Install C++ ATL for build tools
+      run: |
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.ATL --passive --norestart"
+
     - name: Build Solution
       run: msbuild CS2_External.sln /p:Configuration=Release /p:Platform=x64
 
